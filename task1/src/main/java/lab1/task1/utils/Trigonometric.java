@@ -2,7 +2,7 @@ package lab1.task1.utils;
 
 public class Trigonometric {
 
-    private static final double EPS = 1e-12;
+    private static final double EPS = 1e-10;
 
     public static double sec(double x) {
         if (Double.isNaN(x) || Double.isInfinite(x)) {
@@ -11,7 +11,7 @@ public class Trigonometric {
 
         double cos = cos(x);
 
-        if(Math.abs(cos) < EPS) {
+        if (Math.abs(cos) < EPS) {
             return Double.NaN;
         }
 

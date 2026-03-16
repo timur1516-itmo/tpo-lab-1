@@ -1,33 +1,31 @@
 package lab1.task3.controllers;
 
 import lab1.task3.commands.Command;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor
 public class Scenario {
 
-  private final List<Command> commands;
+    private final List<Command> commands = new ArrayList<>();
 
-  public Scenario() {
-    this.commands = new ArrayList<>();
-  }
-
-  public void addCommand(Command command) {
-    commands.add(command);
-  }
-
-  public void execute() {
-    for (Command command : commands) {
-      command.execute();
+    public void addCommand(Command command) {
+        commands.add(command);
     }
-  }
 
-  public List<Command> getCommands() {
-    return new ArrayList<>(commands);
-  }
+    public void execute() {
+        for (Command command : commands) {
+            command.execute();
+        }
+    }
 
-  public void clear() {
-    commands.clear();
-  }
+    public void clear() {
+        commands.clear();
+    }
+
+    public int getCommandsCount() {
+        return commands.size();
+    }
 }

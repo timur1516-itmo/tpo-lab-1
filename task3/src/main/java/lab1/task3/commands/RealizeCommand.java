@@ -1,27 +1,31 @@
 package lab1.task3.commands;
 
 import lab1.task3.models.Whale;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.util.Objects;
-
+@RequiredArgsConstructor
 public class RealizeCommand implements Command {
 
-  private final Whale whale;
-  private final String realization;
+    private final Whale whale;
+    private final Realization realization;
 
-  public RealizeCommand(Whale whale, String realization) {
-    this.whale = Objects.requireNonNull(whale, "Кит не может быть null");
-    this.realization = Objects.requireNonNull(realization, "Осознание не может быть null");
-  }
-
-  @Override
-  public void execute() {
-    if (realization.equals("being_whale")) {
-      whale.setAwareOfBeingWhale(true);
-      System.out.println(whale.getName() + " свыкается с осознанием того, что оно кит.");
-    } else if (realization.equals("not_being_whale")) {
-      whale.setAwareOfNotBeingWhale(true);
-      System.out.println(whale.getName() + " свыкается с осознанием того, что оно уже больше не кит.");
+    @Override
+    public void execute() {
+        switch (realization) {
+            case BEING_WHALE -> {
+                whale.setAwareOfBeingWhale(true);
+                System.out.println(whale.getName() + " свыкается с осознанием того, что оно кит.");
+            }
+            case NOT_BEING_WHALE -> {
+                whale.setAwareOfNotBeingWhale(true);
+                System.out.println(whale.getName() + " свыкается с осознанием того, что оно уже больше не кит.");
+            }
+        }
     }
-  }
+
+    public enum Realization {
+        BEING_WHALE,
+        NOT_BEING_WHALE
+    }
 }

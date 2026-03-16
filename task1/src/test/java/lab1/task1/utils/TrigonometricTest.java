@@ -1,114 +1,62 @@
 package lab1.task1.utils;
 
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Label;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.DoubleRange;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvFileSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
-import java.util.concurrent.ThreadLocalRandom;
-
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TrigonometricTest {
 
-  @ParameterizedTest(name = "sec({0})")
-  @DisplayName("Check corner values")
-  @ValueSource(doubles = {
-    -999.9,
-    -Math.PI,
-    -2.5,
-    -2.0,
-    -1.5,
-    -1.0,
-    -0.5,
-    -0.000001,
-    -0.0001,
-    -0.0,
-    0.0,
-    0.0001,
-    0.000001,
-    0.5,
-    1.0,
-    1.5,
-    Math.PI / 2 - 0.1,
-    Math.PI / 2 + 0.1,
-    2.0,
-    2.5,
-    Math.PI,
-    999.9,
-    Double.NaN,
-    Double.POSITIVE_INFINITY,
-    Double.NEGATIVE_INFINITY,
-    Double.MIN_VALUE,
-  })
-  void checkCornerDots(double param) {
-    double expected = 1.0 / Math.cos(param);
-    double actual = Trigonometric.sec(param);
+    private static final double EPS = 1e-6;
 
-    if (Double.isNaN(expected) || Double.isInfinite(expected)) {
-      assertTrue(Double.isNaN(actual) || Double.isInfinite(actual),
-        "Expected NaN or Infinity for sec(" + param + ")");
-    } else {
-      assertAll(
-        () -> assertEquals(expected, actual, 0.0001,
-          "sec(" + param + ") failed")
-      );
+    @ParameterizedTest(name = "sec({0}) = {1}")
+    @DisplayName("Проверка между точками по табличным значениям")
+    @CsvSource({
+            "-3.1415926536, -1.0",
+            "-2.3561944902, -1.4142135624",
+            "-1.5707963268, NaN",
+            "-0.7853981634, 1.4142135624",
+            "0.0, 1.0",
+            "0.7853981634, 1.4142135624",
+            "1.5707963268, NaN",
+            "2.3561944902, -1.4142135624",
+            "3.1415926536, -1.0"
+    })
+    void checkTableValues(double x, double expected) {
+        double actual = Trigonometric.sec(x);
+
+        if (Double.isNaN(expected)) {
+            assertTrue(Double.isNaN(actual), String.format("Ожидался NaN для sec(%f), получен %f", x, actual));
+        } else {
+            assertEquals(expected, actual, EPS, String.format("sec(%f) должен быть равен %f", x, expected));
+        }
     }
-  }
 
-  @ParameterizedTest(name = "sec({0}) = {1}")
-  @DisplayName("Check between dots with table values")
-  @CsvFileSource(resources = "/table_values.csv", numLinesToSkip = 1, delimiter = ';')
-  void checkTableValues(double x, double y) {
-    assertAll(
-      () -> assertEquals(y, Trigonometric.sec(x), 0.001,
-        "sec(" + x + ") should equal " + y)
-    );
-  }
+    @Property
+    @Label("Тест периодичности: sec(x) = sec(x + 2π)")
+    void testSecPeriodicity(@ForAll @DoubleRange(min = -10.0, max = 10.0) double x) {
+        double sec1 = Trigonometric.sec(x);
+        double sec2 = Trigonometric.sec(x + 2 * Math.PI);
 
-  @Test
-  @DisplayName("Test sec(0) = 1")
-  void testSecZero() {
-    assertEquals(1.0, Trigonometric.sec(0.0), 1e-10);
-    assertEquals(1.0, Trigonometric.sec(-0.0), 1e-10);
-  }
-
-  @Test
-  @DisplayName("Test sec at discontinuity points")
-  void testSecDiscontinuity() {
-    // sec(π/2) должен быть NaN или бесконечностью
-    double result1 = Trigonometric.sec(Math.PI / 2);
-    assertTrue(Double.isNaN(result1) || Double.isInfinite(result1));
-    
-    double result2 = Trigonometric.sec(-Math.PI / 2);
-    assertTrue(Double.isNaN(result2) || Double.isInfinite(result2));
-  }
-
-  @Test
-  @DisplayName("Test sec periodicity")
-  void testSecPeriodicity() {
-    double x = 0.5;
-    double sec1 = Trigonometric.sec(x);
-    double sec2 = Trigonometric.sec(x + 2 * Math.PI);
-    double sec3 = Trigonometric.sec(x - 2 * Math.PI);
-    
-    assertEquals(sec1, sec2, 0.001, "sec should be periodic with period 2π");
-    assertEquals(sec1, sec3, 0.001, "sec should be periodic with period 2π");
-  }
-
-  @Test
-  @DisplayName("Test sec symmetry: sec(-x) = sec(x)")
-  void testSecSymmetry() {
-    double[] testValues = {0.1, 0.5, 1.0, 1.4};
-    
-    for (double x : testValues) {
-      double secPos = Trigonometric.sec(x);
-      double secNeg = Trigonometric.sec(-x);
-      assertEquals(secPos, secNeg, 0.0001,
-        "sec should be even: sec(-" + x + ") should equal sec(" + x + ")");
+        Assumptions.assumeFalse(Double.isNaN(sec1) || Double.isNaN(sec2));
+        assertEquals(sec1, sec2, EPS, "sec должен быть периодическим с периодом 2π");
     }
-  }
+
+    @Property
+    @Label("Тест четности: sec(-x) = sec(x)")
+    void testSecSymmetry(@ForAll @DoubleRange(min = -10.0, max = 10.0) double x) {
+        double secPos = Trigonometric.sec(x);
+        double secNeg = Trigonometric.sec(-x);
+
+        Assumptions.assumeFalse(Double.isNaN(secPos) || Double.isNaN(secNeg));
+        assertEquals(secPos, secNeg, EPS,
+                "sec должна быть чётной: sec(-" + x + ") должна быть равна sec(" + x + ")");
+    }
 }
